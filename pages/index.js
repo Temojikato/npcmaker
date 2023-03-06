@@ -1,36 +1,20 @@
 import Head from "next/head";
+
 import { useState } from "react";
 import styles from "./index.module.css";
 import InputField from "./components/InputField";
 
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFunctions, httpsCallable, httpsCallableFromURL } from "firebase/functions";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyD1hVb_jlF3oxL9YuBRparqF9CJcnHKxmQ",
-  authDomain: "npcmaker-62152.firebaseapp.com",
-  projectId: "npcmaker-62152",
-  storageBucket: "npcmaker-62152.appspot.com",
-  messagingSenderId: "106157963553",
-  appId: "1:106157963553:web:85e2e9614766d4c7392660",
-  measurementId: "G-TRM7RQG5HM"
-};
-
-// Initialize Firebase
-let analytics;
-const app = initializeApp(firebaseConfig);
-
-if (app.name && typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+export async function getStaticProps() {
+	return {
+		props: {},
+	};
 }
 
-export default function Home() {
-  const [wInfo, setwInfo] = useState();
+function Home() {
+	const [wInfo, setwInfo] = useState();
   const [cName, setcName] = useState();
   const [cContext, setcContext] = useState();
   const [cBackstory, setcBackstory] = useState();
@@ -39,17 +23,31 @@ export default function Home() {
   const [cPersonality, setcPersonality] = useState();
   const [cLooks, setcLooks] = useState();
 
-  const [result, setResult] = useState();
+  const [result, setResult] = useState({result:""});
   const [submitting, setSubmitting] = useState(false);
-  // const [continueResult, setContinueResult] = useState("");
-  
-  async function onSubmit(event) {
-    event.preventDefault();
+
+  const [submitting2, setSubmitting2] = useState(false);
+
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD1hVb_jlF3oxL9YuBRparqF9CJcnHKxmQ",
+    authDomain: "npcmaker-62152.firebaseapp.com",
+    databaseURL: "https://npcmaker-62152-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "npcmaker-62152",
+    storageBucket: "npcmaker-62152.appspot.com",
+    messagingSenderId: "106157963553",
+    appId: "1:106157963553:web:85e2e9614766d4c7392660",
+    measurementId: "G-TRM7RQG5HM"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const functions = getFunctions(app);
+
+  async function getNPC() {
+    setSubmitting(true);
     try {
-
-      setSubmitting(true);
-
-      const request = { 
+      const result = await httpsCallableFromURL(functions, 'https://getnpc-bdwuntrh4a-uc.a.run.app')({ 
         wInfo: wInfo, 
         cName: cName,
         cContext: cContext, 
@@ -58,31 +56,23 @@ export default function Home() {
         cClass: cClass, 
         cPersonality: cPersonality, 
         cLooks: cLooks
-      }
-
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
       });
-
-      const data = await response.json();
-
-      if (response.status !== 200) {
-        throw data.error || new Error(`Request failed with status ${response.status}`);
-      }
-
-      setSubmitting(false);
-      setResult(data.result);
-    } catch (error) {
-      // Consider implementing your own error handling logic here
-      console.error(error.message);
-      alert(error.message);
-    }
+      const data = result.data;
+      if (data.error != null)
+        alert(data.error);
+      else
+        setResult(data);
+    }catch(error){
+      // Getting the Error details.
+      const code = error.code;
+      const message = error.message;
+      const details = error.details;
+      console.error(code + "||" + error.message + ": " + details);
+      alert(message);
+    };
+    setSubmitting(false);
   }
-
+  
   return (
     <div>
       <Head>
@@ -93,20 +83,30 @@ export default function Home() {
       <main className={styles.main}>
         <img src="/dog.png" className={styles.icon} />
         <h3>Create my NPC</h3>
-          <InputField name="worldInfo" value={wInfo} onChange={(e) => setwInfo(e.target.value)} placeholder="World Info, ex: Technological level, fiction or reality, Forgotten Realms (be as broad as you can here, maybe even a small story)"/>
-          <InputField name="characterContext" value={cName} onChange={(e) => setcName(e.target.value)} placeholder="Character Name (will be generated if left empty)"/>
-          <InputField name="characterContext" value={cContext} onChange={(e) => setcContext(e.target.value)} placeholder="Character Context, ex: Where do they live, do they have parents alive or any close friends?"/>
-          <InputField name="characterBackstory" value={cBackstory} onChange={(e) => setcBackstory(e.target.value)} placeholder="Character Backstory: What has your character been through so far?"/>
-          <InputField name="characterExpertise" value={cExpertise} onChange={(e) => setcExpertise(e.target.value)} placeholder="Character Expertise, ex: Lockpicking, politics, warfare, gambling"/>
-          <InputField name="characterClass" value={cClass} onChange={(e) => setcClass(e.target.value)} placeholder="Character Class/Profession: Do they have a 'class'? Like 'rogue' or maybe even just 'cook'."/>
-          <InputField name="characterPersonality" value={cPersonality} onChange={(e) => setcPersonality(e.target.value)} placeholder="Character Personality, ex: Flamboyant, Tsundere, Bashful"/>
-          <InputField name="characterLooks" value={cLooks} onChange={(e) => setcLooks(e.target.value)} placeholder="Character Looks, ex: blonde hair, big forehead, long legs"/>
+          <span>World context</span>
+          <InputField name="worldInfo" value={wInfo} onChange={(e) => setwInfo(e.target.value)} placeholder="ex: A medieval fantasy world called WorldName where magic exists and electrical technology does not exist"/>
+          <span>Name</span>
+          <InputField name="characterName" value={cName} onChange={(e) => setcName(e.target.value)} placeholder="ex: Aurora, Vandrian, Ko'li'varanja"/>
+          <span>Context</span>
+          <InputField name="characterContext" value={cContext} onChange={(e) => setcContext(e.target.value)} placeholder="ex: lives in the royal capital with his mother and 2 younger sisters. Often hangs out with their friend Gary."/>
+          <span>Backstory elements</span>
+          <InputField name="characterBackstory" value={cBackstory} onChange={(e) => setcBackstory(e.target.value)} placeholder="ex: Has slain a raging bull in his youth and met a young dragon up in the mountains called Verial"/>
+          <span>Expertise</span>
+          <InputField name="characterExpertise" value={cExpertise} onChange={(e) => setcExpertise(e.target.value)} placeholder="ex: Lockpicking, politics, warfare, gambling"/>
+          <span>Class and/or profession</span>
+          <InputField name="characterClass" value={cClass} onChange={(e) => setcClass(e.target.value)} placeholder="ex: cook, wizard"/>
+          <span>Personality traits</span>
+          <InputField name="characterPersonality" value={cPersonality} onChange={(e) => setcPersonality(e.target.value)} placeholder="ex: Flamboyant, Tsundere, Bashful"/>
+          <span>Looks</span>
+          <InputField name="characterLooks" value={cLooks} onChange={(e) => setcLooks(e.target.value)} placeholder="ex: red hair, big forehead, long legs, tons of accessories"/>
 
-          <button disabled={submitting} onClick={onSubmit}>Generate npc</button>
+          <button disabled={submitting} onClick={getNPC}>Generate npc</button>
           <div className={styles.result}>
-            {result}
+            {result.result}
           </div>
       </main>
     </div>
   );
 }
+
+export default Home;

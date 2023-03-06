@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "npcmaker-62152"
-  }
+    "staging": "npcmaker-62152"
+  },
+  "targets": {},
+  "etags": {}
 }

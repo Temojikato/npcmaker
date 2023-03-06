@@ -1,20 +1,37 @@
 {
-  "name": "npcmaker",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "firebase": "^9.17.1",
-    "next": "^13.1.1",
-    "openai": "^3.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "engines": {
-    "node": "16.17"
-  }
+	"name": "npcmaker",
+	"version": "1.0.0",
+	"description": "N",
+	"author": "Hi-Coder",
+	"license": "MIT",
+	"main": "server.js",
+	"scripts": {
+		"clean": "rimraf nextjs/",
+		"dev": "next dev",
+		"build": "next build",
+		"export": "npm run clean && next build && next export",
+		"start": "next start",
+		"predeploy": "npm run export",
+		"deploy": "npm run predeploy && firebase deploy",
+		"deployFunctions": "npm run predeploy && firebase deploy --only functions",
+		"build:watch": "tsc -w"
+	},
+	"engines": {
+		"node": "16"
+	},
+	"dependencies": {
+		"firebase": "^9.17.1",
+		"firebase-admin": "^11.0.0",
+		"firebase-functions": "^4.2.1",
+		"next": "^12.1.0",
+		"openai": "^3.1.0",
+		"react": "^17.0.2",
+		"react-dom": "^17.0.2",
+		"swr": "latest"
+	},
+	"devDependencies": {
+		"firebase-functions-test": "^3.0.0",
+		"rimraf": "^3.0.2",
+		"shelljs": "^0.8.5"
+	}
 }
