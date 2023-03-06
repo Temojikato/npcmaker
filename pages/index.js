@@ -30,14 +30,14 @@ function Home() {
 
 
   const firebaseConfig = {
-    apiKey: "AIzaSyD1hVb_jlF3oxL9YuBRparqF9CJcnHKxmQ",
-    authDomain: "npcmaker-62152.firebaseapp.com",
-    databaseURL: "https://npcmaker-62152-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "npcmaker-62152",
-    storageBucket: "npcmaker-62152.appspot.com",
-    messagingSenderId: "106157963553",
-    appId: "1:106157963553:web:85e2e9614766d4c7392660",
-    measurementId: "G-TRM7RQG5HM"
+    apiKey: process.env.FBPROJ_API_KEY,
+    authDomain: process.env.FBPROJ_AUTH_DOMAIN,
+    databaseURL: process.env.FBPROJ_DB_URL,
+    projectId: process.env.FBPROJ_PROJECT_ID,
+    storageBucket: process.env.FBPROJ_STORAGE_BUCKET,
+    messagingSenderId: process.env.FBPROJ_MSG_SENDER_ID,
+    appId: process.env.FBPROJ_APP_ID,
+    measurementId: process.env.FBPROJ_MEASURE_ID
   };
 
   // Initialize Firebase

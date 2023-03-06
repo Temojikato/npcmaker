@@ -1,6 +1,5 @@
 const openAI = require("openai");
 
-
 const admin = require("firebase-admin");
 const functions = require("firebase-functions");
 const {onCall, HttpsError} = require("firebase-functions/v2/https");
@@ -18,7 +17,7 @@ exports.getnpc = onCall((request) => {
     const OpenAIApi = openAI.OpenAIApi;
     functions.logger.log(request);
     const configuration = new Configuration({
-        apiKey: "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",
+        apiKey: process.env.OPENAI_API_KEY,
     });
     const openai = new OpenAIApi(configuration);
 
