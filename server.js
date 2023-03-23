@@ -2,17 +2,9 @@ const openAI = require("openai");
 
 const admin = require("firebase-admin");
 const functions = require("firebase-functions");
-const {onCall, HttpsError} = require("firebase-functions/v2/https");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 
 exports.getnpc = onCall((request) => {
-
-    // if (!Number.isFinite(firstNumber) || !Number.isFinite(secondNumber)) {
-    //   // Throwing an HttpsError so that the client gets the error details.
-    //   throw new HttpsError("invalid-argument", "The function must be called " +
-    //           "with two arguments \"firstNumber\" and \"secondNumber\" which " +
-    //           "must both be numbers.");
-    // }
-
     const Configuration = openAI.Configuration;
     const OpenAIApi = openAI.OpenAIApi;
     functions.logger.log(request);
@@ -23,7 +15,7 @@ exports.getnpc = onCall((request) => {
 
     if (!configuration.apiKey) {
         return ({
-          message: "OpenAI API key not configured, please follow instructions in README.md",
+            message: "OpenAI API key not configured, please follow instructions in README.md",
         });
     }
 
@@ -51,65 +43,73 @@ exports.getnpc = onCall((request) => {
             }
         }
     });
-  });
+});
 
-function isNotEmpty(input) {
-    return (input != "" && input != undefined)
+function isEmpty(input) {
+    return (input == "")
+}
+
+function isUsed(input) {
+    return (input == "generate")
 }
 
 function generatePromptNPC(info) {
-    var wInfoString = ""
-    if (isNotEmpty(info.wInfo))
+    var wInfoString = "The world the character lives in "
+    if (isEmpty(info.wInfo))
+        wInfoString = "is unknown to me."
+    else if (isUsed(input))
         wInfoString = ": " + info.wInfo;
     else
-        wInfoString = "is unknown to me."
+        wInfoString = ""
 
     var nameString = ""
-    if (isNotEmpty(info.cName))
+    if (isEmpty(info.cName))
+        nameString = "Please think of a name for my character."
+    else if (isUsed(input))
         nameString = "The character's name is : " + info.cName
     else
-        nameString = "Please think of a name for my character."
-    
+        nameString = "Please don't give the character a name, just refer to them as they/them."
+
     var contextString = ""
-    if (isNotEmpty(info.cContext))
-        contextString = "A bit of context about their life : " + info.cContext
-    else
+    if (isEmpty(info.cContext))
         contextString = "Please think of some context for the character, like parents, friends and pets."
+    else if (isUsed(input))
+        contextString = "A bit of context about their life : " + info.cContext
 
     var backstoryString = ""
-    if (isNotEmpty(info.cBackstory))
-        backstoryString = "The character's backstory : " + info.cBackstory
-    else
+    if (isEmpty(info.cBackstory))
         backstoryString = "Please think of a proper backstory for this character, like some big events they went through."
-    
+    else if (isUsed(input))
+        backstoryString = "The character's backstory : " + info.cBackstory
+
     var expertiseString = ""
-    if (isNotEmpty(info.cExpertise))
-        expertiseString = "They are experts at : " + info.cExpertise
-    else
+    if (isEmpty(info.cExpertise))
         expertiseString = "Please think of some expertise for this character."
+    else if (isUsed(input))
+        expertiseString = "They are experts at : " + info.cExpertise
 
     var classString = ""
-    if (isNotEmpty(info.cClass))
-        classString = "The character's class and/or profession is " + info.cClass
-    else
+    if (isEmpty(info.cClass))
         classString = "Please think of a class and/or profession for this character."
-    
+    else if (isUsed(input))
+        classString = "The character's class and/or profession is " + info.cClass
+
     var personalityString = ""
-    if (isNotEmpty(info.cPersonality))
-        personalityString = "Some personality traits for this character: " + info.cPersonality
-    else
+    if (isEmpty(info.cPersonality))
         personalityString = "Please think of some personality traits for this character."
-    
+    else if (isUsed(input))
+        personalityString = "Some personality traits for this character: " + info.cPersonality
+
     var looksString = ""
-    if (isNotEmpty(info.cLooks))
-        looksString = "The character's looks : " + info.cLooks
-    else
+    if (isEmpty(info.cLooks))
         looksString = "Please think of what this character would physically look like."
-    
+    else if (isUsed(input))
+        looksString = "The character's looks : " + info.cLooks
+
 
     const prompt = `
     I need to create a character for my tabletop RPG game. Here is some info about the character:
-    The world the character lives in ${wInfoString}
+    ${wInfoString}
     ${nameString}
     ${contextString}
     ${backstoryString}
@@ -118,7 +118,7 @@ function generatePromptNPC(info) {
     ${personalityString}
     ${looksString}
 
-    Please answer all these questions for me and deliver it as a nice story of around 1000 words.
+    Please answer all these questions for me and deliver it as a nicely laid out story of around 500 words split into the given categories.
     `
     console.log(prompt);
     return prompt;

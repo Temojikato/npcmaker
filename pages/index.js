@@ -8,13 +8,13 @@ import { initializeApp } from "firebase/app";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "firebase/functions";
 
 export async function getStaticProps() {
-	return {
-		props: {},
-	};
+  return {
+    props: {},
+  };
 }
 
 function Home() {
-	const [wInfo, setwInfo] = useState();
+  const [wInfo, setwInfo] = useState();
   const [cName, setcName] = useState();
   const [cContext, setcContext] = useState();
   const [cBackstory, setcBackstory] = useState();
@@ -23,7 +23,16 @@ function Home() {
   const [cPersonality, setcPersonality] = useState();
   const [cLooks, setcLooks] = useState();
 
-  const [result, setResult] = useState({result:""});
+  const [wInfoActive, setwInfoActive] = useState(false);
+  const [cNameActive, setcNameActive] = useState(false);
+  const [cContextActive, setcContextActive] = useState(false);
+  const [cBackstoryActive, setcBackstoryActive] = useState(false);
+  const [cExpertiseActive, setcExpertiseActive] = useState(false);
+  const [cClassActive, setcClassActive] = useState(false);
+  const [cPersonalityActive, setcPersonalityActive] = useState(false);
+  const [cLooksActive, setcLooksActive] = useState(false);
+
+  const [result, setResult] = useState({ result: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const [submitting2, setSubmitting2] = useState(false);
@@ -47,14 +56,14 @@ function Home() {
   async function getNPC() {
     setSubmitting(true);
     try {
-      const result = await httpsCallableFromURL(functions, 'https://getnpc-bdwuntrh4a-uc.a.run.app')({ 
-        wInfo: wInfo, 
+      const result = await httpsCallableFromURL(functions, 'https://getnpc-bdwuntrh4a-uc.a.run.app')({
+        wInfo: wInfo,
         cName: cName,
-        cContext: cContext, 
-        cBackstory: cBackstory, 
-        cExpertise: cExpertise, 
-        cClass: cClass, 
-        cPersonality: cPersonality, 
+        cContext: cContext,
+        cBackstory: cBackstory,
+        cExpertise: cExpertise,
+        cClass: cClass,
+        cPersonality: cPersonality,
         cLooks: cLooks
       });
       const data = result.data;
@@ -62,7 +71,7 @@ function Home() {
         alert(data.error);
       else
         setResult(data);
-    }catch(error){
+    } catch (error) {
       // Getting the Error details.
       const code = error.code;
       const message = error.message;
@@ -72,38 +81,118 @@ function Home() {
     };
     setSubmitting(false);
   }
-  
+
   return (
     <div>
       <Head>
-        <title>OpenAI Quickstart</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>NPCMaker</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
         <link rel="icon" href="/dog.png" />
       </Head>
 
       <main className={styles.main}>
         <img src="/dog.png" className={styles.icon} />
         <h3>Create my NPC</h3>
-          <span>World context</span>
-          <InputField name="worldInfo" value={wInfo} onChange={(e) => setwInfo(e.target.value)} placeholder="ex: A medieval fantasy world called WorldName where magic exists and electrical technology does not exist"/>
-          <span>Name</span>
-          <InputField name="characterName" value={cName} onChange={(e) => setcName(e.target.value)} placeholder="ex: Aurora, Vandrian, Ko'li'varanja"/>
-          <span>Context</span>
-          <InputField name="characterContext" value={cContext} onChange={(e) => setcContext(e.target.value)} placeholder="ex: lives in the royal capital with his mother and 2 younger sisters. Often hangs out with their friend Gary."/>
-          <span>Backstory elements</span>
-          <InputField name="characterBackstory" value={cBackstory} onChange={(e) => setcBackstory(e.target.value)} placeholder="ex: Has slain a raging bull in his youth and met a young dragon up in the mountains called Verial"/>
-          <span>Expertise</span>
-          <InputField name="characterExpertise" value={cExpertise} onChange={(e) => setcExpertise(e.target.value)} placeholder="ex: Lockpicking, politics, warfare, gambling"/>
-          <span>Class and/or profession</span>
-          <InputField name="characterClass" value={cClass} onChange={(e) => setcClass(e.target.value)} placeholder="ex: cook, wizard"/>
-          <span>Personality traits</span>
-          <InputField name="characterPersonality" value={cPersonality} onChange={(e) => setcPersonality(e.target.value)} placeholder="ex: Flamboyant, Tsundere, Bashful"/>
-          <span>Looks</span>
-          <InputField name="characterLooks" value={cLooks} onChange={(e) => setcLooks(e.target.value)} placeholder="ex: red hair, big forehead, long legs, tons of accessories"/>
-
-          <button disabled={submitting} onClick={getNPC}>Generate npc</button>
-          <div className={styles.result}>
-            {result.result}
+        <div class="container">
+          <div class="row">
+            <div class="name-tf mb-3">
+              <div class="col">
+                <label for="characterNameTF" class="form-label">Name</label>
+              </div>
+              <div class="col">
+                <div class="btn-group" role="group">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="btn-cname" id="btn-use-cname" onClick={function (event) { setcNameActive(true) }}></input>
+                      <label class="form-check-label" for="btn-use-cname">use</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="btn-cname" id="btn-gen-cname" onClick={function (event) { setcName("generate"); setcNameActive(false) }}></input>
+                      <label class="form-check-label" for="btn-gen-cname">gen</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="btn-cname" id="btn-no-cname" onClick={function (event) { setcName(""); setcName(undefined); setcNameActive(false) }} checked></input>
+                      <label class="form-check-label" for="btn-no-cname">no</label>
+                  </div>
+                </div>
+              </div>
+              <input type="textarea" class="form-control" name="characterName" id="characterNameTF"
+                value={cName} onChange={(e) => setcName(e.target.value)} disabled={!cNameActive} placeholder="ex: Aurora, Vandrian, Ko'li'varanja" />
+            </div>
           </div>
+          <div class="row">
+            <div class="col">
+              <div class="world-info-tf mb-3">
+                <label for="WorldContextTF" class="form-label">World context</label>
+                <textarea type="textarea" class="form-control" name="worldInfo" id="WorldContextTF" aria-describedby="WorldContextTFHelp"
+                  value={wInfo} onChange={(e) => setwInfo(e.target.value)} placeholder="ex: A medieval fantasy world called WorldName where magic exists and electrical technology does not exist"
+                  rows="8" style={{ fontSize: 16 + "px" }}></textarea>
+                <div id="WorldContextTFHelp" class="form-text">Try to explain it in a proper story format like the example"</div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="quirks-container">
+                <div calss="container">
+                  <div class="row expertise-tf mb-3">
+                    <label for="characterExpertiseTF" class="form-label">Expertise</label>
+                    <input type="textarea" class="form-control" name="characterExpertise" id="characterExpertiseTF"
+                      value={cExpertise} onChange={(e) => setcExpertise(e.target.value)} placeholder="ex: Lockpicking, politics, warfare, gambling" />
+                  </div>
+                  <div class="row class-tf mb-3">
+                    <label for="characterClassTF" class="form-label">Class and/or profession</label>
+                    <input type="textarea" class="form-control" name="characterClass" id="characterClassTF"
+                      value={cClass} onChange={(e) => setcClass(e.target.value)} placeholder="ex: cook, wizard" />
+                  </div>
+                  <div class="row personality-tf mb-3">
+                    <label for="characterPersonalityTF" class="form-label">Personality traits</label>
+                    <input type="textarea" class="form-control" name="characterPersonality" id="characterPersonalityTF" aria-describedby="characterPersonalityTFHelp"
+                      value={cPersonality} onChange={(e) => setcPersonality(e.target.value)} placeholder="ex: Flamboyant, Tsundere, Bashful" />
+                    <div id="characterPersonalityTFHelp" class="form-text">Try to stick to singular words or small sentences like "always skipping about"</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="backstory-tf mb-3">
+                <label for="characterBackstoryTF" class="form-label">Backstory elements</label>
+                <textarea type="textarea" class="form-control" name="characterBackstory" id="characterBackstoryTF" aria-describedby="characterBackstoryTFHelp"
+                  value={cBackstory} onChange={(e) => setcBackstory(e.target.value)} placeholder="ex: Has slain a raging bull in his youth and met a young dragon up in the mountains called Verial"
+                  rows="5" style={{ fontSize: 16 + "px" }}></textarea>
+                <div id="characterBackstoryTFHelp" class="form-text">Try to stick to a nice short summarisation"</div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="context-tf mb-3">
+                <label for="characterContextTF" class="form-label">Context</label>
+                <textarea type="textarea" class="form-control" name="characterContext" id="characterContextTF" aria-describedby="characterContextTFHelp"
+                  value={cContext} onChange={(e) => setcContext(e.target.value)} placeholder="ex: lives in the royal capital with his mother and 2 younger sisters. Often hangs out with their friend Gary."
+                  rows="5" style={{ fontSize: 16 + "px" }}></textarea>
+                <div id="characterContextTFHelp" class="form-text">Anything external that is important to this character's story</div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="looks-tf mb-3">
+              <label for="characterLooksTF" class="form-label">Looks</label>
+              <input type="textarea" class="form-control" name="characterLooks" id="characterLooksTF" aria-describedby="characterLooksTFHelp"
+                value={cLooks} onChange={(e) => setcLooks(e.target.value)} placeholder="ex: a woman with long red hair wearing an office suit, sunglasses and a ton of accessories" />
+              <div id="characterLooksTFHelp" class="form-text">Try to describe it within a single sentence</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 col-6 mx-auto">
+          <button disabled={submitting} onClick={getNPC} class="btn btn-primary" type="button">Generate npc</button>
+        </div>
+        <div className={styles.result}>
+          {result.result}
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous" />
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous" />
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD" crossorigin="anonymous" />
       </main>
     </div>
   );
