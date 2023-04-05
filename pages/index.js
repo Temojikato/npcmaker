@@ -109,6 +109,8 @@ function Home() {
     );
   }
 
+  //q: the below radio buttons have visual bugs when clicked?
+  //a:
   const Field = (name, setActive, setValue) => {
     return (
       <div class="col text-end">
