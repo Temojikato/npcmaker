@@ -34,12 +34,14 @@ function Home() {
   const [cPersonalityActive, setcPersonalityActive] = useState(false);
   const [cLooksActive, setcLooksActive] = useState(false);
 
-  const [result, setResult] = useState({ result: { cName: "", cAlignment:"", cClass: "", cLooks: "", cPersonality: "", cBackstory: "", cContext: "", cExpertise: "" } });
+  const [result, setResult] = useState({ result: { cName: "", cAlignment: "", cClass: "", cLooks: "", cPersonality: "", cBackstory: "", cContext: "", cExpertise: "" } });
   const [submitting, setSubmitting] = useState(false);
   const [genDone, setGenDone] = useState(false);
+  const [cObj, setCObj] = useState({ cName: "", cAlignment: "", cClass: "", cLooks: "", cPersonality: "", cBackstory: "", cContext: "", cExpertise: "" });
 
-  const [submitting2, setSubmitting2] = useState(false);
-
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [imageDone, setImageDone] = useState(false);
+  const [image, setImage] = useState(null);
 
   const firebaseConfig = {
     apiKey: process.env.FBPROJ_API_KEY,
@@ -71,11 +73,17 @@ function Home() {
         cLooks: cLooks
       });
       const data = result.data;
-      if (data.error != null)
+      if (data.error != null) {
         alert(data.error);
-      else
+      } else {
         setResult(data);
-        setGenDone(true);
+        let json = JSON.stringify(data.result);
+        let obj = JSON.parse(JSON.parse(json))
+        setCObj(obj);
+        console.log(obj);
+      }
+
+      setGenDone(true);
     } catch (error) {
       // Getting the Error details.
       const code = error.code;
@@ -86,26 +94,57 @@ function Home() {
     };
     setSubmitting(false);
   }
+  async function getImage() {
+    setGeneratingImage(true);
+    console.log(cObj);
+    try {
+      const result = await httpsCallableFromURL(functions, 'https://us-central1-npcmaker-62152.cloudfunctions.net/getimage')({
+        prompt: cObj.cLooks
+      });
+      const data = result.data;
+      if (data.error != null){
+        alert(data.error);
+      } else {
+        setImage(data);
+        console.log(data);
+      }
+      setImageDone(true);
+    } catch (error) {
+      // Getting the Error details.
+      const code = error.code;
+      const message = error.message;
+      const details = error.details;
+      console.error(code + "||" + error.message + ": " + details);
+      alert(message);
+    };
+    setGeneratingImage(false);
+  }
 
   const Result = () => {
-    let json = JSON.stringify(result.result);
-    let obj = JSON.parse(JSON.parse(json));
-
-    console.log(obj);
-    console.log(typeof obj);
-
-    return (      
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">{obj.cName}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">{obj.cClass}</h6>
-            <p class="card-text">{obj.cLooks}</p>
-            <p class="card-text">{obj.cPersonality}</p>
-            <p class="card-text">{obj.cBackstory}</p>
-            <p class="card-text">{obj.cContext}</p>
-            <p class="card-text">{obj.cExpertise}</p>
+    return (
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col">
+              <h5 class="card-title">{cObj.cName}</h5>
+              <h6 class="card-subtitle mb-2 text-muted">{cObj.cClass}</h6>
+            </div>
+            <div class="col text-end">
+              {image == null &&
+                <button type="button" class="btn btn-primary" onClick={getImage}>Generate image</button>
+              }
+              {imageDone &&
+                <img src={image.result} />
+              }
+            </div>
           </div>
+          <p class="card-text">{cObj.cLooks}</p>
+          <p class="card-text">{cObj.cPersonality}</p>
+          <p class="card-text">{cObj.cBackstory}</p>
+          <p class="card-text">{cObj.cContext}</p>
+          <p class="card-text">{cObj.cExpertise}</p>
         </div>
+      </div>
     );
   }
 
@@ -277,7 +316,7 @@ function Home() {
           <button disabled={submitting} onClick={getNPC} class="btn btn-primary" type="button">Generate npc</button>
         </div>
         <div>
-          { genDone && <Result /> }
+          {genDone && <Result />}
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous" />
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous" />
