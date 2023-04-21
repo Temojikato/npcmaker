@@ -1,4 +1,5 @@
 const openAI = require("openai");
+const fetch = require("node-fetch");
 
 const admin = require("firebase-admin");
 const functions = require("firebase-functions");
@@ -22,18 +23,42 @@ exports.getnpc = onCall((request) => {
 
     return new Promise(async (resolve, reject) => {
         try {
-            const completion = await openai.createCompletion({
-                model: "text-davinci-003",
-                prompt: generatePromptNPC(request.data),
-                temperature: 0.3,
-                max_tokens: 1000
-            })
-            return (resolve({ result: completion.data.choices[0].text }));
+            const systemMessage = {
+                role: "system",
+                content: "You will be generating TTRPG npc's for me. I will give it to you in a template json object and then just some requirements in a chat format after. Please fill in the values and give it back to me. In the prompt there will be further requirements for every field of the JSON and its value. You will have to remove any styling and just return your answer like the template JSON.",
+            }
+            const rqBody = {
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    systemMessage,
+                    generatePromptNPC(request.data)
+                ],
+            }
+            //create a proper JSON payload for the OpenAI API with system message and prompt for the body of the request
+            functions.logger.log("REQUEST BODY");
+            const json = JSON.stringify(rqBody);
+            functions.logger.log(json);
+            //fetch a POST from https://api.openai.com/v1/chat/completions with bearer token and rqbody as a json body then return the response as the resolved promise
+
+            const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: json,
+            }).then(async (res) => {
+                const data = await res.json();
+                functions.logger.log("DATA HERE");
+                functions.logger.log(data);
+                return (resolve({ data: data }));
+            });
         } catch (error) {
+            functions.logger.log(error);
             // Consider adjusting the error handling logic for your use case
             if (error.response) {
                 console.error(error.response.status, error.response.data);
-                return (reject(error))
+                return (reject(error.response.data))
             } else {
                 console.error(`Error with OpenAI API request: ${error.message}`);
                 return (reject(error))
@@ -81,25 +106,25 @@ function generatePromptNPC(info) {
 
     var expertiseString = ""
     if (needsGen(info.cExpertise))
-        expertiseString = "Please think of some expertise for this character."
+        expertiseString = "Please think of some expertises for this character, at least 3. Prefarably in different fields."
     else if (isUsed(info.cExpertise))
         expertiseString = info.cExpertise
 
     var classString = ""
     if (needsGen(info.cClass))
-        classString = "Please think of a class and/or profession for this character."
+        classString = "Please think of a class and/or profession for this character per standard tabletop fantasy rules."
     else if (isUsed(info.cClass))
         classString = info.cClass
 
     var personalityString = ""
     if (needsGen(info.cPersonality))
-        personalityString = "Please think of some personality traits for this character."
+        personalityString = "Please think of some personality traits for this character. Some good, some bad."
     else if (isUsed(info.cPersonality))
         personalityString = info.cPersonality
 
     var looksString = ""
     if (needsGen(info.cLooks))
-        looksString = "Please think of what this character would physically look like."
+        looksString = "Please think of what this character would physically look like. Height, build, hair color, eye color, etc."
     else if (isUsed(info.cLooks))
         looksString = info.cLooks
 
@@ -134,7 +159,7 @@ function generatePromptNPC(info) {
     cName: Please keep gender and race in mind when thinking of names. If these are not known yet, you can do whatever you want. Make sure to create full names, first name and last name. Mayben even a middle name every now and then, flip a coin. The answer you give should be just the name as I will use it as a title.
     cClass: This is the subtitle of the character, so make sure to include the class and/or profession of the character. If the character has multiple classes, please make sure to include all of them. If the character has no class or profession, please make sure to include that as well. No unnecessary text please as it is a subtitle.
     cBackstory: The backstory must be a bit longer, more expansive and detailed. I need at least 3 life changing events for the character to have gone through.
-    cLooks: Please make sure to keep in mind future ai image generation on cLooks, make it like an image generation prompt so I can immediately send it through an image generation API.
+    cLooks: Please make sure to keep in mind future ai image generation on cLooks, make it like an image generation prompt so I can immediately send it through an image generation API. I need at least 150 token's worth and some high quality rendering tags.
     wInfo: I do not need any info about the world, so wInfo can be left empty. 
     cContext: I would like to have at least some friends and family, including names and profession, in the context part. 
     cExpertise: make sure to transform the info into a nice story, including where they learned these for example.
@@ -143,8 +168,16 @@ function generatePromptNPC(info) {
     Make sure to not put any control characters in your answers, like newlines, tabs, etc. I will be parsing the answers with a regex and it will break if you do that. \n is fine though.
     `
     console.log(prompt);
-    return prompt;
+
+    const promptMessage = {
+        role: "user",
+        content: prompt,
+    }
+    return promptMessage;
 }
+
+
+
 exports.getimage = onCall((req) => {
     const Configuration = openAI.Configuration;
     const OpenAIApi = openAI.OpenAIApi;
@@ -163,8 +196,9 @@ exports.getimage = onCall((req) => {
     return new Promise(async (resolve, reject) => {
         try {
             const prompt = req.data.prompt;
+            const promptFull = "DnD style fantasy digital art character portrait for a character in a high fantasy tabletop RPG game with the following looks: " + prompt + ", high resolution, high octane render, dynamic lighting, unreal engine, photorealism fantasy, 1:1 aspect ratio";
             const completion = await openai.createImage({
-                prompt: prompt,
+                prompt: promptFull,
                 n: 1,
                 size: "512x512",
             })

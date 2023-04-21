@@ -7,6 +7,8 @@ import InputField from "./components/InputField";
 import { initializeApp } from "firebase/app";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "firebase/functions";
 
+//TODO: keep messages in an array so the response remembers. Make sure to clear it on refresh.
+
 export async function getStaticProps() {
   return {
     props: {},
@@ -41,6 +43,7 @@ function Home() {
 
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imageDone, setImageDone] = useState(false);
+  const [resultClassForImageDone, setResultClassForImageDone] = useState("");
   const [image, setImage] = useState(null);
 
   const firebaseConfig = {
@@ -72,15 +75,17 @@ function Home() {
         cPersonality: cPersonality,
         cLooks: cLooks
       });
-      const data = result.data;
+      console.log(result);
+      const data = result.data.data.choices[0].message.content;
+      console.log(result.data.data.choices[0].message.content);
       if (data.error != null) {
+        console.log(data.error);
         alert(data.error);
       } else {
+        console.log(data);
         setResult(data);
-        let json = JSON.stringify(data.result);
-        let obj = JSON.parse(JSON.parse(json))
+        let obj = JSON.parse(data);
         setCObj(obj);
-        console.log(obj);
       }
 
       setGenDone(true);
@@ -90,7 +95,7 @@ function Home() {
       const message = error.message;
       const details = error.details;
       console.error(code + "||" + error.message + ": " + details);
-      alert(message);
+      alert(code + "||" + error.message + ": " + details);
     };
     setSubmitting(false);
   }
@@ -102,9 +107,10 @@ function Home() {
         prompt: cObj.cLooks
       });
       const data = result.data;
-      if (data.error != null){
+      if (data.error != null) {
         alert(data.error);
       } else {
+        setResultClassForImageDone("-8");
         setImage(data);
         console.log(data);
       }
@@ -125,24 +131,30 @@ function Home() {
       <div class="card">
         <div class="card-body">
           <div class="row">
-            <div class="col">
-              <h5 class="card-title">{cObj.cName}</h5>
-              <h6 class="card-subtitle mb-2 text-muted">{cObj.cClass}</h6>
+            <div class={`col-sm${resultClassForImageDone}`}>
+              <div class="row">
+                <div class="col">
+                  <h5 class="card-title">{cObj.cName}</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">{cObj.cClass}</h6>
+                </div>
+                <div class="col text-end">
+                  {image == null &&
+                    <button type="button" class="btn btn-primary" onClick={getImage}>Generate image</button>
+                  }
+                </div>
+              </div>
+              <p class="card-text">{cObj.cLooks}</p>
+              <p class="card-text">{cObj.cPersonality}</p>
+              <p class="card-text">{cObj.cBackstory}</p>
+              <p class="card-text">{cObj.cContext}</p>
+              <p class="card-text">{cObj.cExpertise}</p>
             </div>
-            <div class="col text-end">
-              {image == null &&
-                <button type="button" class="btn btn-primary" onClick={getImage}>Generate image</button>
-              }
-              {imageDone &&
+            {imageDone &&
+              <div class="col-sm-4">
                 <img src={image.result} />
-              }
-            </div>
+              </div>
+            }
           </div>
-          <p class="card-text">{cObj.cLooks}</p>
-          <p class="card-text">{cObj.cPersonality}</p>
-          <p class="card-text">{cObj.cBackstory}</p>
-          <p class="card-text">{cObj.cContext}</p>
-          <p class="card-text">{cObj.cExpertise}</p>
         </div>
       </div>
     );
