@@ -1,4 +1,5 @@
 import Head from "next/head";
+import useVH from "react-vh";
 
 import { useState } from "react";
 import styles from "./index.module.css";
@@ -16,6 +17,7 @@ export async function getStaticProps() {
 }
 
 function Home() {
+  useVH();
   const [wInfo, setwInfo] = useState();
   const [cName, setcName] = useState();
   const [cAlignment, setcAlignment] = useState();
@@ -83,9 +85,17 @@ function Home() {
         alert(data.error);
       } else {
         console.log(data);
-        setResult(data);
-        let obj = JSON.parse(data);
-        setCObj(obj);
+        try {
+          let obj = JSON.parse(data);
+          setResult(data);
+          setCObj(obj);
+        } catch (error) {
+          const regex = /\,(?=\s*?[\}\]])/g;
+          const fJson = data.replace(regex, '');
+          const data2 = JSON.parse(fJson);
+          setResult(fJson);
+          setCObj(data2);
+        }
       }
 
       setGenDone(true);
@@ -135,11 +145,11 @@ function Home() {
               <div class="row">
                 <div class="col">
                   <h5 class="card-title">{cObj.cName}</h5>
-                  <h6 class="card-subtitle mb-2 text-muted">{cObj.cClass}</h6>
+                  <h6 class="card-subtitle mb-2 text-muted">{cObj.cClass + " (" + cObj.cAlignment + ")"}</h6>
                 </div>
                 <div class="col text-end">
                   {image == null &&
-                    <button type="button" class="btn btn-primary" onClick={getImage}>Generate image</button>
+                    <button disabled={generatingImage} type="button" class="btn btn-primary" onClick={getImage}>Generate image</button>
                   }
                 </div>
               </div>
@@ -151,7 +161,7 @@ function Home() {
             </div>
             {imageDone &&
               <div class="col-sm-4">
-                <img src={image.result} />
+                <img style={{ width: "44vh", height: "44vh" }} src={image.result} />
               </div>
             }
           </div>

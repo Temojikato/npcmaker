@@ -163,7 +163,9 @@ function generatePromptNPC(info) {
     wInfo: I do not need any info about the world, so wInfo can be left empty. 
     cContext: I would like to have at least some friends and family, including names and profession, in the context part. 
     cExpertise: make sure to transform the info into a nice story, including where they learned these for example.
+    cAlignment: should be just the alignment, like "Chaotic Good" or "Neutral Evil".
 
+    Make sure not to put a trailing comma at the end of the last key value pair in the json object you return. It will break my code. so no comma after the value of cPersonality.
     Most importantly make sure not to repeat any information across the different keys and values. Fill them up with new ideas and information. Do not recycle any asnwers from other keys.
     Make sure to not put any control characters in your answers, like newlines, tabs, etc. I will be parsing the answers with a regex and it will break if you do that. \n is fine though.
     `
@@ -196,7 +198,7 @@ exports.getimage = onCall((req) => {
     return new Promise(async (resolve, reject) => {
         try {
             const prompt = req.data.prompt;
-            const promptFull = "DnD style fantasy digital art character portrait for a character in a high fantasy tabletop RPG game with the following looks: " + prompt + ", high resolution, high octane render, dynamic lighting, unreal engine, photorealism fantasy, 1:1 aspect ratio";
+            const promptFull = "a character from a dnd fantasy world: " + prompt;
             const completion = await openai.createImage({
                 prompt: promptFull,
                 n: 1,
